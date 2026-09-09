@@ -12,7 +12,7 @@ export default function CurrentConditions({ data }: CurrentConditionsProps) {
   // Restrained contextual accents:
   // Good: Emerald | Moderate: Amber | Poor: Amber-Rose | Very Poor/Severe: Rose/Crimson
   const getAqiBadgeStyle = (status: string) => {
-    switch (status.toUpperCase()) {
+    switch ((status ?? '').toUpperCase()) {
       case 'GOOD':
         return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
       case 'MODERATE':
@@ -105,7 +105,7 @@ export default function CurrentConditions({ data }: CurrentConditionsProps) {
 
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-4xl sm:text-5xl font-bold tracking-tight text-white font-mono">
-              {data.temp}
+              {data.temp != null ? data.temp : '--'}
             </span>
             <span className="text-sm text-slate-400 font-mono">°C</span>
           </div>
@@ -125,7 +125,7 @@ export default function CurrentConditions({ data }: CurrentConditionsProps) {
 
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-4xl sm:text-5xl font-bold tracking-tight text-white font-mono">
-              {data.humidity}
+              {data.humidity != null ? data.humidity : '--'}
             </span>
             <span className="text-sm text-slate-400 font-mono">%</span>
           </div>
@@ -145,11 +145,11 @@ export default function CurrentConditions({ data }: CurrentConditionsProps) {
 
           <div className="flex items-baseline gap-1.5 mt-1">
             <span className="text-4xl sm:text-5xl font-bold tracking-tight text-white font-mono">
-              {data.windSpeed}
+              {data.windSpeed != null ? data.windSpeed : '--'}
             </span>
             <span className="text-xs text-slate-400 font-mono">km/h</span>
             <span className="text-xs font-bold font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-cyan-300 ml-auto">
-              {data.windDirection}
+              {data.windDirection ?? '--'}
             </span>
           </div>
 

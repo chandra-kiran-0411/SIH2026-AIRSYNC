@@ -34,6 +34,11 @@ export default function Footer() {
               <div className="text-[10px] text-slate-500">Synoptic boundary winds</div>
             </div>
 
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-cyan-500/20 border-l-2 border-l-cyan-400">
+              <div className="text-cyan-300 font-semibold text-[11px] mb-0.5">Open-Meteo</div>
+              <div className="text-[10px] text-slate-500">Live weather · No API key</div>
+            </div>
+
             <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
               <div className="text-cyan-400 font-semibold text-[11px] mb-0.5">AirSync Physics + AI</div>
               <div className="text-[10px] text-slate-500">Boundary-layer reasoning</div>

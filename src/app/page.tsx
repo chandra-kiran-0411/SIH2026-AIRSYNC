@@ -14,7 +14,10 @@ import AskAirSync from '@/components/AskAirSync';
 import Footer from '@/components/Footer';
 import { TimelineCode, AtmosphericSnapshot, RegionTelemetry, ForecastResponse, ActionAdvisory } from '@/lib/types';
 
-// Robust default state ensuring instant render without layout shift
+// Weather loading/error sentinel: null = loading, string = error
+// Real values are injected after /api/weather resolves.
+// Hardcoded weather values (29, 62, 6, NW) are intentionally removed.
+// The UI will show "--" until the API responds.
 const defaultSnapshot: AtmosphericSnapshot = {
   timeline: 'now',
   timelineLabel: 'Real-time Live',
@@ -22,11 +25,11 @@ const defaultSnapshot: AtmosphericSnapshot = {
   aqiStatus: 'POOR',
   pm25: 138,
   pm25Status: 'HIGH',
-  temp: 29,
-  humidity: 62,
-  windSpeed: 6,
-  windDirection: 'NW',
-  updatedAgo: 'Updated 2 minutes ago',
+  temp: null as unknown as number,       // real value injected from /api/weather
+  humidity: null as unknown as number,   // real value injected from /api/weather
+  windSpeed: null as unknown as number,  // real value injected from /api/weather
+  windDirection: '--',
+  updatedAgo: 'Loading weather…',
   inversion: {
     level: 'HIGH',
     description: 'Stable atmospheric conditions may trap pollutants close to the surface.',
@@ -135,6 +138,7 @@ export default function AirSyncHomePage() {
   const [advisories, setAdvisories] = useState<ActionAdvisory[]>(defaultAdvisories);
   const [selectedDistrict, setSelectedDistrict] = useState<string>('noida');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
 
   // Fetch data on timeline change
   useEffect(() => {
@@ -148,7 +152,17 @@ export default function AirSyncHomePage() {
 
         if (overviewRes.ok) {
           const overviewData = await overviewRes.json();
-          setSnapshot(overviewData);
+          // overview API returns a flat shape; merge carefully to preserve
+          // nested objects (inversion, dispersion, plume, riskSummary) that
+          // the overview route does NOT return.
+          setSnapshot(prev => ({
+            ...prev,
+            aqi: overviewData.aqi ?? prev.aqi,
+            aqiStatus: overviewData.aqiStatus ?? prev.aqiStatus,
+            pm25: overviewData.pollutants?.pm25 ?? prev.pm25,
+            pm25Status: overviewData.pm25Status ?? prev.pm25Status,
+            // DO NOT overwrite weather fields here — those come from /api/weather
+          }));
         }
 
         if (regionsRes.ok) {
@@ -193,6 +207,48 @@ export default function AirSyncHomePage() {
     }
 
     loadStaticData();
+  }, []);
+
+  // ── REAL WEATHER: fetch Open-Meteo via /api/weather ──────────────────────
+  useEffect(() => {
+    async function loadWeather() {
+      try {
+        const res = await fetch('/api/weather', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Weather API returned ${res.status}`);
+        const w = await res.json();
+        if (w.status === 'error') throw new Error(w.error || 'Weather fetch failed');
+
+        const cur = w.current;
+
+        // Format timestamp for "Last updated"
+        let updatedAgo = 'Weather data: Open-Meteo';
+        if (cur.time) {
+          const d = new Date(cur.time);
+          updatedAgo = `Weather: Open-Meteo • Updated ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })} IST`;
+        }
+
+        setWeatherError(null);
+        setSnapshot(prev => ({
+          ...prev,
+          temp: cur.temperature != null ? Math.round(cur.temperature) : prev.temp,
+          humidity: cur.humidity != null ? Math.round(cur.humidity) : prev.humidity,
+          windSpeed: cur.windSpeed != null ? Math.round(cur.windSpeed) : prev.windSpeed,
+          windDirection: cur.windDirectionLabel ?? prev.windDirection,
+          updatedAgo,
+          // patch dispersion windSpeedKmh with real wind speed too
+          dispersion: {
+            ...prev.dispersion,
+            windSpeedKmh: cur.windSpeed != null ? Math.round(cur.windSpeed) : prev.dispersion.windSpeedKmh,
+          },
+        }));
+      } catch (err: any) {
+        console.error('Failed to fetch weather from /api/weather:', err);
+        setWeatherError('Weather data temporarily unavailable');
+        setSnapshot(prev => ({ ...prev, updatedAgo: 'Weather data temporarily unavailable' }));
+      }
+    }
+
+    loadWeather();
   }, []);
 
   return (

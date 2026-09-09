@@ -41,20 +41,20 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
               </div>
               <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                {data.inversion.level}
+                {data.inversion?.level}
               </span>
             </div>
 
             {/* Description */}
             <p className="text-sm text-slate-200 leading-relaxed font-normal">
-              {data.inversion.description}
+              {data.inversion?.description}
             </p>
 
             {/* Visual: Vertical Atmospheric Layers Diagram */}
             <div className="mt-5 p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs">
               <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
                 <span>Vertical Atmospheric Cross-Section</span>
-                <span className="text-rose-400 font-mono">Boundary: ~{data.inversion.boundaryHeightMeters}m</span>
+                <span className="text-rose-400 font-mono">Boundary: ~{data.inversion?.boundaryHeightMeters}m</span>
               </div>
 
               {/* Atmospheric layers visualization */}
@@ -82,7 +82,7 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
                     <div className="text-[10px] text-slate-300 font-sans mt-0.5">PM2.5 & Vehicle emissions concentrated near surface</div>
                   </div>
                   <span className="relative z-10 text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {data.inversion.trappingRatioPercent}% Trapped
+                    {data.inversion?.trappingRatioPercent}% Trapped
                   </span>
                 </div>
               </div>
@@ -108,13 +108,13 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
               </div>
               <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                {data.dispersion.level}
+                {data.dispersion?.level}
               </span>
             </div>
 
             {/* Description */}
             <p className="text-sm text-slate-200 leading-relaxed font-normal">
-              {data.dispersion.description}
+              {data.dispersion?.description}
             </p>
 
             {/* Mini-indicators Box */}
@@ -122,27 +122,27 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-400">Surface Wind Velocity</span>
                 <span className="font-mono font-semibold text-white">
-                  {data.dispersion.windSpeedKmh} km/h (Calm)
+                  {data.dispersion?.windSpeedKmh} km/h (Calm)
                 </span>
               </div>
               <div className="w-full bg-white/[0.08] h-1.5 rounded-full overflow-hidden">
                 <div 
                   className="bg-rose-500 h-full rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min((data.dispersion.windSpeedKmh / 25) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((data.dispersion?.windSpeedKmh / 25) * 100, 100)}%` }}
                 />
               </div>
 
               <div className="flex items-center justify-between text-xs pt-1">
                 <span className="text-slate-400">Atmospheric Mixing</span>
                 <span className="font-mono font-semibold text-rose-300">
-                  {data.dispersion.mixingStatus}
+                  {data.dispersion?.mixingStatus}
                 </span>
               </div>
 
               <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.06]">
                 <span className="text-slate-400">Ventilation Index</span>
                 <span className="font-mono text-slate-300">
-                  {data.dispersion.ventilationIndex} m²/s <span className="text-rose-400 text-[10px]">(&lt;2000 Critical)</span>
+                  {data.dispersion?.ventilationIndex} m²/s <span className="text-rose-400 text-[10px]">(&lt;2000 Critical)</span>
                 </span>
               </div>
             </div>
@@ -167,13 +167,13 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
               </div>
               <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                {data.plume.level}
+                {data.plume?.level}
               </span>
             </div>
 
             {/* Description */}
             <p className="text-sm text-slate-200 leading-relaxed font-normal">
-              {data.plume.description}
+              {data.plume?.description}
             </p>
 
             {/* Directional Transport Corridor & Satellite Indicator */}
@@ -195,14 +195,14 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
               <div className="flex items-center justify-between text-xs pt-1">
                 <span className="text-slate-400">NASA FIRMS Fires Detected</span>
                 <span className="font-mono font-semibold text-white">
-                  ~{data.plume.fireCountSatellite} anomalies
+                  ~{data.plume?.fireCountSatellite} anomalies
                 </span>
               </div>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] text-[11px] text-amber-300/90 flex items-center justify-between">
-            <span className="italic">{data.plume.confidence}</span>
+            <span className="italic">{data.plume?.confidence}</span>
             <span className="text-slate-500 font-mono">VIIRS/MODIS</span>
           </div>
         </div>
@@ -221,14 +221,14 @@ export default function AtmosphericIntelligence({ data }: AtmosphericIntelligenc
             <div>
               <div className="flex items-center gap-2.5">
                 <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                  {data.riskSummary.headline}
+                  {data.riskSummary?.headline}
                 </h3>
                 <span className="px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-500 text-white tracking-wide shadow-md shadow-rose-950">
-                  {data.riskSummary.level}
+                  {data.riskSummary?.level}
                 </span>
               </div>
               <p className="text-sm sm:text-base text-slate-200 mt-1 leading-relaxed max-w-3xl">
-                {data.riskSummary.explanation}
+                {data.riskSummary?.explanation}
               </p>
             </div>
           </div>
