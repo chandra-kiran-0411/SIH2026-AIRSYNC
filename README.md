@@ -142,6 +142,7 @@ airsync/
 │   │   ├── AskAirSync.tsx              # AI Q&A chatbot interface
 │   │   └── Footer.tsx                  # Data provenance and branding
 │   └── lib/
+│       ├── aqi.ts                      # CPCB NAQI calculation & sub-index models
 │       ├── db.ts                       # SQLite database layer (schema + queries)
 │       ├── reasoningEngine.ts          # Causal physics AI reasoning engine
 │       └── types.ts                    # TypeScript interfaces for all data shapes
@@ -223,14 +224,14 @@ AirSync translates raw environmental sensor measurements into actionable causal 
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                           AIRSYNC SCIENTIFIC ENGINE                              │
-├─────────────────────────┬─────────────────────────────┬──────────────────────────┤
-│ 1. CPCB NAQI Formulation │ 2. Ventilation Coefficient  │ 3. PBL Thermal Inversion │
-│    Linear Interpolation │    $VC = H_m \times U$      │    Lapse Rate Reversal   │
-├─────────────────────────┼─────────────────────────────┼──────────────────────────┤
-│ 4. Plume Transport Lag  │ 5. Secondary Smog Growth    │ 6. Predictive Trajectory │
-│    $\Delta t = D / |v|$ │    Hygroscopic Swelling     │    Harmonic + Spline Fit │
-└─────────────────────────┴─────────────────────────────┴──────────────────────────┘
+│                            AIRSYNC SCIENTIFIC ENGINE                             │
+├──────────────────────────┬─────────────────────────────┬─────────────────────────┤
+│ 1. CPCB NAQI Formulation │ 2. Ventilation Coefficient  │ 3. PBL Inversion Model  │
+│    Linear Interpolation  │    VC = Hm × U              │    Lapse Rate Reversal  │
+├──────────────────────────┼─────────────────────────────┼─────────────────────────┤
+│ 4. Plume Transport Lag   │ 5. Secondary Smog Growth    │ 6. Predictive Curve     │
+│    Δt = D / |v|          │    Hygroscopic Swelling     │    Harmonic + Spline    │
+└──────────────────────────┴─────────────────────────────┴─────────────────────────┘
 ```
 
 ---
@@ -243,27 +244,33 @@ AirSync computes the official Indian National Air Quality Index (NAQI) as define
 
 For any pollutant concentration $C$, its individual sub-index $I$ is calculated via piecewise linear interpolation between its regulatory breakpoints:
 
-$$I = I_{\text{low}} + \left[ \frac{I_{\text{high}} - I_{\text{low}}}{C_{\text{high}} - C_{\text{low}}} \right] \times (C - C_{\text{low}})$$
+$$
+I = I_{\text{low}} + \left[ \frac{I_{\text{high}} - I_{\text{low}}}{C_{\text{high}} - C_{\text{low}}} \right] \times (C - C_{\text{low}})
+$$
 
 Where:
 - $C$: Measured pollutant concentration ($\mu\text{g/m}^3$)
 - $C_{\text{low}}, C_{\text{high}}$: Lower and upper concentration breakpoints for the category
-- $I_{\text{low}}, $I_{\text{high}}$: Corresponding sub-index score range
+- $I_{\text{low}}, I_{\text{high}}$: Corresponding sub-index score range
 - $I$: Resulting sub-index value for that specific pollutant
 
 #### B. Composite Index Aggregation (Max-Operator Principle)
 
 The overall AQI is governed by the single most toxic pollutant (the dominant stressor), modeled as the maximum of all available pollutant sub-indices:
 
-$$\text{AQI} = \max \Big( I_{\text{PM2.5}}, \; I_{\text{PM10}}, \; I_{\text{NO}_2}, \; I_{\text{SO}_2}, \; I_{\text{CO}}, \; I_{\text{O}_3} \Big)$$
+$$
+\text{AQI} = \max \Big( I_{\text{PM2.5}}, \; I_{\text{PM10}}, \; I_{\text{NO}_2}, \; I_{\text{SO}_2}, \; I_{\text{CO}}, \; I_{\text{O}_3} \Big)
+$$
 
-$$\text{Prominent Pollutant} = \arg\max_{p \in \mathcal{P}} \big( I_p \big)$$
+$$
+\text{Prominent Pollutant} = \underset{p \in \mathcal{P}}{\operatorname{argmax}} \big( I_p \big)
+$$
 
 Implemented in [`calculateIndianAqi()`](file:///c:/Users/GUNAVARDHAN/.gemini/antigravity/scratch/airsync/src/lib/aqi.ts#L78-L103) and consumed in [`/api/overview`](file:///c:/Users/GUNAVARDHAN/.gemini/antigravity/scratch/airsync/src/app/api/overview/route.ts#L67) and [`/api/regions`](file:///c:/Users/GUNAVARDHAN/.gemini/antigravity/scratch/airsync/src/app/api/regions/route.ts#L157).
 
 #### C. Official CPCB Breakpoints Reference Table
 
-| Category | AQI Range ($I_{\text{low}} - I_{\text{high}}$) | PM2.5 ($\mu\text{g/m}^3$) | PM10 ($\mu\text{g/m}^3$) | Health Impact & Physiological Severity |
+| Category | AQI Range (CPCB) | PM2.5 (µg/m³) | PM10 (µg/m³) | Health Impact & Physiological Severity |
 |---|---|---|---|---|
 | **Good** | 0 – 50 | 0 – 30 | 0 – 50 | Minimal impact |
 | **Satisfactory** | 51 – 100 | 31 – 60 | 51 – 100 | Minor breathing discomfort to sensitive people |
@@ -276,7 +283,9 @@ Implemented in [`calculateIndianAqi()`](file:///c:/Users/GUNAVARDHAN/.gemini/ant
 
 Used in [`src/app/api/forecast/route.ts`](file:///c:/Users/GUNAVARDHAN/.gemini/antigravity/scratch/airsync/src/app/api/forecast/route.ts#L57-L62) to reconstruct physically realistic PM2.5 concentrations from projected AQI values:
 
-$$C = C_{\text{low}} + \left[ \frac{C_{\text{high}} - C_{\text{low}}}{I_{\text{high}} - I_{\text{low}}} \right] \times (I - I_{\text{low}})$$
+$$
+C = C_{\text{low}} + \left[ \frac{C_{\text{high}} - C_{\text{low}}}{I_{\text{high}} - I_{\text{low}}} \right] \times (I - I_{\text{low}})
+$$
 
 ---
 
@@ -286,7 +295,9 @@ The rate at which the atmosphere can dilute and transport ground-level pollutant
 
 #### Formula:
 
-$$VC = H_m \times U$$
+$$
+VC = H_m \times U
+$$
 
 Where:
 - $H_m$: Planetary Boundary Layer (PBL) / Mixing Height ($\text{meters}$)
@@ -294,26 +305,26 @@ Where:
 - $VC$: Ventilation Coefficient ($\text{m}^2/\text{s}$)
 
 ```
-   ┌────────────────────────────────────────────────────────┐
-   │             AIR POLLUTION DISPERSION COLUMN            │
-   │                                                        │
-   │   Wind Speed (U) ────────► ────────►                   │
-   │  ┌─────────────────────────────────────────┐           │
-   │  │ ☁️ Inversion Lid (Warm Air Barrier)      │           │
-   │  ├─────────────────────────────────────────┤ ▲         │
-   │  │                                         │ │         │
-   │  │    Trapped Ground Layer (Emissions)     │ │ Mixing  │
-   │  │    Smoke, PM2.5, NOx Concentration      │ │ Height  │
-   │  │                                         │ │ (H_m)   │
-   │  └─────────────────────────────────────────┘ ▼         │
-   │  ═════════════════════════════════════════════         │
-   │                Delhi NCR Surface                       │
-   └────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│             AIR POLLUTION DISPERSION COLUMN            │
+│                                                        │
+│   Wind Speed (U) ────────► ────────►                   │
+│  ┌─────────────────────────────────────────┐           │
+│  │ Inversion Lid (Warm Air Cap Barrier)    │           │
+│  ├─────────────────────────────────────────┤ ▲         │
+│  │                                         │ │         │
+│  │  Trapped Ground Layer (Emissions)       │ │ Mixing  │
+│  │  Smoke, PM2.5, NOx Concentration        │ │ Height  │
+│  │                                         │ │ (H_m)   │
+│  └─────────────────────────────────────────┘ ▼         │
+│  ═════════════════════════════════════════════         │
+│                Delhi NCR Surface                       │
+└────────────────────────────────────────────────────────┘
 ```
 
 #### Atmospheric Dispersion Regimes:
 
-| Ventilation Coefficient ($VC$) | Dispersion Category | Atmospheric Behavior in Delhi NCR | AirSync Advisory Trigger |
+| Ventilation Index ($VC$) | Dispersion Category | Atmospheric Behavior in Delhi NCR | AirSync Advisory Trigger |
 |---|---|---|---|
 | **$VC < 2,000 \text{ m}^2/\text{s}$** | **Critical / Poor** | Surface stagnation, pollutant trapping, low vertical and horizontal dilution | Pre-emptive misting, heavy vehicle diversions, industrial shift rescheduling |
 | **$2,000 \le VC < 6,000 \text{ m}^2/\text{s}$** | **Moderate** | Subdued dispersion; gradual particulate accumulation | Normal monitoring, dust suppression |
@@ -321,10 +332,10 @@ Where:
 
 #### AirSync Timeline Snapshot Calibration ([`src/lib/db.ts`](file:///c:/Users/GUNAVARDHAN/.gemini/antigravity/scratch/airsync/src/lib/db.ts#L145-L245)):
 
-- **NOW ($t = 0\text{h}$)**: $H_m = 320\text{ m}, \; U = 6\text{ km/h} \implies VC = 1,920\text{ m}^2/\text{s}$ $\rightarrow$ **Critical Stagnation**
-- **Tomorrow AM Peak ($+24\text{h}$)**: $H_m = 240\text{ m}, \; U = 4\text{ km/h} \implies VC = 960\text{ m}^2/\text{s}$ $\rightarrow$ **Severe Stagnation**
-- **Projected Peak ($+48\text{h}$)**: $H_m = 280\text{ m}, \; U = 5\text{ km/h} \implies VC = 1,400\text{ m}^2/\text{s}$ $\rightarrow$ **Poor Dispersion**
-- **Dispersal Phase ($+72\text{h}$)**: $H_m = 650\text{ m}, \; U = 12\text{ km/h} \implies VC = 7,800\text{ m}^2/\text{s}$ $\rightarrow$ **Active Flushing**
+- **NOW ($t = 0\text{h}$)**: $H_m = 320\text{ m}, \; U = 6\text{ km/h} \implies VC = 1,920\text{ m}^2/\text{s}$ → **Critical Stagnation**
+- **Tomorrow AM Peak ($+24\text{h}$)**: $H_m = 240\text{ m}, \; U = 4\text{ km/h} \implies VC = 960\text{ m}^2/\text{s}$ → **Severe Stagnation**
+- **Projected Peak ($+48\text{h}$)**: $H_m = 280\text{ m}, \; U = 5\text{ km/h} \implies VC = 1,400\text{ m}^2/\text{s}$ → **Poor Dispersion**
+- **Dispersal Phase ($+72\text{h}$)**: $H_m = 650\text{ m}, \; U = 12\text{ km/h} \implies VC = 7,800\text{ m}^2/\text{s}$ → **Active Flushing**
 
 ---
 
@@ -336,15 +347,21 @@ The core reason why Delhi NCR experiences intense winter smog is **thermal inver
 
 Under standard tropospheric conditions, air temperature decreases with altitude:
 
-$$\Gamma = -\frac{dT}{dz} \approx +6.5^\circ\text{C} / \text{km} \quad (\text{Normal Environmental Lapse Rate})$$
+$$
+\Gamma = -\frac{dT}{dz} \approx +6.5^\circ\text{C}/\text{km} \quad (\text{Normal Environmental Lapse Rate})
+$$
 
 During winter nights, rapid longwave radiative cooling of the ground surface chills the contact air layer while air aloft remains warmer, reversing the temperature gradient:
 
-$$\frac{dT}{dz} > 0 \quad (\text{Thermal Inversion Layer})$$
+$$
+\frac{dT}{dz} > 0 \quad (\text{Thermal Inversion Layer})
+$$
 
 Because warmer, less dense air overlies cooler, denser ground air, vertical buoyancy is extinguished:
 
-$$\text{Buoyant Acceleration } a_z = g \left( \frac{T_{\text{parcel}} - T_{\text{env}}}{T_{\text{env}}} \right) < 0$$
+$$
+a_z = g \left( \frac{T_{\text{parcel}} - T_{\text{env}}}{T_{\text{env}}} \right) < 0 \quad (\text{Negative Buoyant Acceleration})
+$$
 
 Pollutants emitted at ground level (exhaust, biomass smoke, dust) cannot rise and remain trapped under an atmospheric "lid."
 
@@ -352,11 +369,15 @@ Pollutants emitted at ground level (exhaust, biomass smoke, dust) cannot rise an
 
 The ground boundary layer volume $V$ over an urban basin of surface area $A$ is:
 
-$$V = A \times H_m$$
+$$
+V = A \times H_m
+$$
 
 Under steady emission flux $Q$ ($\text{g/s}$), steady-state ground concentration $C$ follows the box dilution relationship:
 
-$$C = \frac{Q}{A \times H_m \times U}$$
+$$
+C = \frac{Q}{A \times H_m \times U}
+$$
 
 When inversion height $H_m$ compresses from $1,200\text{ m}$ to $240\text{ m}$, the available dilution volume shrinks by **80%**, causing a proportional spike in ground-level particulate concentration even without any increase in emission sources.
 
@@ -364,7 +385,9 @@ When inversion height $H_m$ compresses from $1,200\text{ m}$ to $240\text{ m}$, 
 
 AirSync models the trapping efficiency percentage $R_{\text{trap}}$ as an inverse function of boundary layer depth:
 
-$$R_{\text{trap}} = \left[ 1 - \left( \frac{H_m}{H_{\text{ref}}} \right) \right] \times 100\%$$
+$$
+R_{\text{trap}} = \left( 1 - \frac{H_m}{H_{\text{ref}}} \right) \times 100\%
+$$
 
 Where $H_{\text{ref}} \approx 1,800\text{ m}$ is the uninhibited summer convective mixing height.
 - At $H_m = 320\text{ m}$: $R_{\text{trap}} \approx 82\%$ trapped
@@ -381,7 +404,9 @@ AirSync couples **NASA FIRMS satellite thermal anomaly detection** (VIIRS/MODIS)
 
 Prevailing northwest synoptic winds transport agricultural smoke parcels along the Indo-Gangetic Plain:
 
-$$\vec{v} = (u, v) = \big( |\vec{U}| \cos\theta, \; |\vec{U}| \sin\theta \big)$$
+$$
+\vec{v} = (u, v) = \big( |\vec{U}| \cos\theta, \; |\vec{U}| \sin\theta \big)
+$$
 
 Where $\theta \approx 315^\circ$ represents prevailing North-Westerly (NW) wind flow directed toward South-East (SE).
 
@@ -389,7 +414,9 @@ Where $\theta \approx 315^\circ$ represents prevailing North-Westerly (NW) wind 
 
 The time $\Delta t$ required for an upwind smoke plume at distance $D$ to reach Delhi NCR is given by:
 
-$$\Delta t = \frac{D}{|\vec{v}_{\text{transport}}|}$$
+$$
+\Delta t = \frac{D}{|\vec{v}_{\text{transport}}|}
+$$
 
 - Upwind fire centroid distance: $D \approx 250 - 350\text{ km}$ (Punjab/Haryana agricultural belt)
 - Upper boundary-layer transport winds: $|\vec{v}_{\text{transport}}| \approx 8 - 14\text{ km/h}$
@@ -413,7 +440,9 @@ AirSync accounts for secondary aerosol chemistry and moisture interactions under
 
 Under high morning relative humidity ($RH > 65\%$), hygroscopic salts (ammonium nitrate $\text{NH}_4\text{NO}_3$ and ammonium sulfate $(\text{NH}_4)_2\text{SO}_4$) absorb water vapor, increasing particle diameter:
 
-$$D_p(RH) = D_{p,\text{dry}} \times \left( 1 - \frac{RH}{100} \right)^{-\gamma}$$
+$$
+D_p(RH) = D_{p,\text{dry}} \times \left( 1 - \frac{RH}{100} \right)^{-\gamma}
+$$
 
 Where $\gamma$ is the aerosol hygroscopicity parameter ($\approx 0.20 - 0.28$ for urban NCR aerosols).
 
@@ -421,7 +450,9 @@ Where $\gamma$ is the aerosol hygroscopicity parameter ($\approx 0.20 - 0.28$ fo
 
 The optical cross-section and light extinction coefficient $\beta_{\text{ext}}$ scale with particle cross-sectional area ($D_p^2$):
 
-$$\beta_{\text{ext}} \propto N \cdot D_p(RH)^2$$
+$$
+\beta_{\text{ext}} \propto N \cdot D_p(RH)^2
+$$
 
 As relative humidity surges past 70% in morning inversions, aerosol particles swell, multiplying visual extinction, reducing Koschmieder visual range ($L_v = 3.912 / \beta_{\text{ext}}$), and generating dense morning smog before mid-day solar dehydration.
 
@@ -435,7 +466,9 @@ In [`src/app/api/forecast/route.ts`](file:///c:/Users/GUNAVARDHAN/.gemini/antigr
 
 The continuous AQI curve incorporates diurnal solar-heating oscillation on top of synoptic baseline trends:
 
-$$\text{AQI}(t) = \text{BaseAQI}(t) + A \cdot \sin\left( \frac{2\pi \cdot t}{T} + \phi \right)$$
+$$
+\text{AQI}(t) = \text{BaseAQI}(t) + A \cdot \sin\left( \frac{2\pi \cdot t}{T} + \phi \right)
+$$
 
 Where:
 - $T = 24\text{ hours}$ (diurnal cycle period)
@@ -446,12 +479,18 @@ Where:
 
 The SVG forecast curve uses piecewise cubic Bézier curves connecting adjacent 12-hour forecast coordinates $(x_i, y_i)$ to guarantee first-derivative ($C^1$) smoothness:
 
-$$B(t) = (1-t)^3 P_0 + 3(1-t)^2 t P_1 + 3(1-t) t^2 P_2 + t^3 P_3, \quad t \in [0, 1]$$
+$$
+B(t) = (1-t)^3 P_0 + 3(1-t)^2 t P_1 + 3(1-t) t^2 P_2 + t^3 P_3, \quad t \in [0, 1]
+$$
 
 With smooth horizontal tangent control points:
 
-$$P_1 = \big( x_0 + 0.45 \cdot (x_1 - x_0), \; y_0 \big)$$
-$$P_2 = \big( x_1 - 0.45 \cdot (x_1 - x_0), \; y_1 \big)$$
+$$
+\begin{aligned}
+P_1 &= \big( x_0 + 0.45 \cdot (x_1 - x_0), \; y_0 \big) \\
+P_2 &= \big( x_1 - 0.45 \cdot (x_1 - x_0), \; y_1 \big)
+\end{aligned}
+$$
 
 ---
 
@@ -461,15 +500,18 @@ The ambient background visualizer in [`src/components/AtmosphericCanvas.tsx`](fi
 
 #### Particle Integration:
 
-$$x_{t+1} = x_t + v \cdot \cos\theta$$
-$$y_{t+1} = y_t + v \cdot \sin\theta$$
+$$
+\begin{aligned}
+x_{t+1} &= x_t + v \cdot \cos\theta \\
+y_{t+1} &= y_t + v \cdot \sin\theta
+\end{aligned}
+$$
 
 Where:
-- $\theta = 35^\circ$ ($0.6108\text{ radians}$), directing streamlines from upper-left (North-West) to lower-right (South-East)
+- $\theta = 35^\circ$ ($0.6108\text{ rad}$), directing streamlines from upper-left (North-West) to lower-right (South-East)
 - Particle speed: $v \in [0.35, 1.05]\text{ px/frame}$
 - Particle length: $L \in [25, 70]\text{ px}$
-- Toroidal wrap-around boundary condition:
-  $$\text{if } x > W + 50 \implies x \leftarrow -50, \quad y \leftarrow \text{Uniform}(0, H)$$
+- Boundary wrap: $\text{if } x > W + 50 \implies x \leftarrow -50, \quad y \leftarrow \operatorname{Uniform}(0, H)$
 
 ---
 
@@ -544,11 +586,11 @@ Logs every question answered by the Ask AirSync engine along with the generated 
 
 | Route | Method | Description |
 |---|---|---|
-| `/api/overview` | GET | Live AQI + pollutants from CAMS and current weather. Supports `?timeline=now\|24h\|48h\|72h`. |
+| `/api/overview` | GET | Live AQI + pollutants from CAMS and current weather. Supports `?timeline=now / 24h / 48h / 72h`. |
 | `/api/weather` | GET | Detailed live weather (temperature, humidity, wind, pressure, weather code, 72h hourly) from Open-Meteo. |
 | `/api/regions` | GET | Telemetry for all 6 NCR districts from SQLite, filtered by `?timeline=`. |
 | `/api/forecast` | GET | Full 72-hour AQI forecast array plus identified peak window with causal explanations. |
-| `/api/action` | GET | Action advisories from SQLite. Optional `?role=citizens\|authorities\|industries`. |
+| `/api/action` | GET | Action advisories from SQLite. Optional `?role=citizens / authorities / industries`. |
 | `/api/ask-airsync` | POST | Runs the causal reasoning engine. Body: `{ "question": "..." }`. Returns answer, keyFactors, confidence, meteorologicalBasis. |
 | `/api/ask-airsync` | GET | Returns the 5 most recent AI query logs from the database. |
 | `/api/status` | GET | Operational status of all data pipelines (CPCB, NASA FIRMS, ECMWF/CAMS, IMD, AirSync Physics). |
