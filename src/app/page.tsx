@@ -21,69 +21,69 @@ import { TimelineCode, AtmosphericSnapshot, RegionTelemetry, ForecastResponse, A
 const defaultSnapshot: AtmosphericSnapshot = {
   timeline: 'now',
   timelineLabel: 'Real-time Live',
-  aqi: 287,
-  aqiStatus: 'POOR',
-  pm25: 138,
-  pm25Status: 'HIGH',
+  aqi: 132,
+  aqiStatus: 'MODERATE',
+  pm25: 65,
+  pm25Status: 'MODERATE',
   temp: null as unknown as number,       // real value injected from /api/weather
   humidity: null as unknown as number,   // real value injected from /api/weather
   windSpeed: null as unknown as number,  // real value injected from /api/weather
   windDirection: '--',
-  updatedAgo: 'Loading weather…',
+  updatedAgo: 'Synchronizing live telemetry…',
   inversion: {
-    level: 'HIGH',
-    description: 'Stable atmospheric conditions may trap pollutants close to the surface.',
-    boundaryHeightMeters: 320,
-    trappingRatioPercent: 82
+    level: 'MODERATE',
+    description: 'Moderate boundary layer mixing with diurnal thermal gradients across Delhi NCR basin.',
+    boundaryHeightMeters: 480,
+    trappingRatioPercent: 64
   },
   dispersion: {
-    level: 'LOW',
-    description: 'Weak winds and low atmospheric mixing may prevent pollutants from dispersing.',
-    windSpeedKmh: 6,
-    mixingStatus: 'Poor',
-    ventilationIndex: 1920
+    level: 'MODERATE',
+    description: 'Surface winds maintaining horizontal dispersion across NCR corridors.',
+    windSpeedKmh: 11,
+    mixingStatus: 'Moderate',
+    ventilationIndex: 2840
   },
   plume: {
-    level: 'MODERATE',
-    description: 'Satellite-detected agricultural fires and prevailing winds indicate possible plume transport toward NCR.',
+    level: 'LOW',
+    description: 'Current satellite surveillance indicates minimal agricultural burn contribution.',
     corridor: 'Punjab → Haryana → Delhi NCR',
-    fireCountSatellite: 248,
-    confidence: 'Potential plume influence'
+    fireCountSatellite: 42,
+    confidence: 'Low plume impact'
   },
   riskSummary: {
-    level: 'HIGH',
-    headline: 'Pollution Build-up Risk',
-    explanation: 'Strong overnight inversion combined with weak winds may cause PM2.5 accumulation across Delhi NCR.'
+    level: 'MODERATE',
+    headline: 'Standard Diurnal Variation',
+    explanation: 'Moderate particulate load. Sensitive groups should monitor evening dispersion windows.'
   }
 };
 
 const defaultRegions: RegionTelemetry[] = [
-  { id: 'delhi', name: 'Delhi', hindiName: 'दिल्ली', districtKey: 'delhi', aqi: 287, aqiStatus: 'POOR', pm25: 138, tomorrowAqi: 326, trend: 'up', inversion: 'HIGH', dispersion: 'LOW', plumeInfluence: 'MODERATE', keySource: 'Vehicular + Secondary Inversion', coordinates: { x: 230, y: 190 }, lat: 28.6139, lng: 77.2090 },
-  { id: 'noida', name: 'Noida', hindiName: 'नोएडा', districtKey: 'noida', aqi: 312, aqiStatus: 'VERY POOR', pm25: 156, tomorrowAqi: 347, trend: 'up', inversion: 'HIGH', dispersion: 'LOW', plumeInfluence: 'MODERATE', keySource: 'Construction Dust + Traffic', coordinates: { x: 310, y: 220 }, lat: 28.5355, lng: 77.3910 },
-  { id: 'gurugram', name: 'Gurugram', hindiName: 'गुरुग्राम', districtKey: 'gurugram', aqi: 265, aqiStatus: 'POOR', pm25: 124, tomorrowAqi: 298, trend: 'up', inversion: 'MODERATE', dispersion: 'LOW', plumeInfluence: 'LOW', keySource: 'Highway Transit + Stagnation', coordinates: { x: 155, y: 275 }, lat: 28.4595, lng: 77.0266 },
-  { id: 'ghaziabad', name: 'Ghaziabad', hindiName: 'गाज़ियाबाद', districtKey: 'ghaziabad', aqi: 326, aqiStatus: 'VERY POOR', pm25: 168, tomorrowAqi: 362, trend: 'up', inversion: 'HIGH', dispersion: 'LOW', plumeInfluence: 'MODERATE', keySource: 'Industrial Biomass + Inversion', coordinates: { x: 325, y: 130 }, lat: 28.6692, lng: 77.4538 },
-  { id: 'faridabad', name: 'Faridabad', hindiName: 'फरीदाबाद', districtKey: 'faridabad', aqi: 294, aqiStatus: 'POOR', pm25: 142, tomorrowAqi: 328, trend: 'up', inversion: 'HIGH', dispersion: 'LOW', plumeInfluence: 'LOW', keySource: 'Industrial Corridor + Settling', coordinates: { x: 245, y: 315 }, lat: 28.4089, lng: 77.3178 },
-  { id: 'greater_noida', name: 'Greater Noida', hindiName: 'ग्रेटर नोएडा', districtKey: 'greater_noida', aqi: 308, aqiStatus: 'VERY POOR', pm25: 150, tomorrowAqi: 339, trend: 'up', inversion: 'HIGH', dispersion: 'LOW', plumeInfluence: 'MODERATE', keySource: 'Expressway Corridors + Plume', coordinates: { x: 375, y: 260 }, lat: 28.4744, lng: 77.5040 }
+  { id: 'delhi', name: 'Delhi', hindiName: 'दिल्ली', districtKey: 'delhi', aqi: 132, aqiStatus: 'MODERATE', pm25: 65, tomorrowAqi: 178, trend: 'up', inversion: 'MODERATE', dispersion: 'MODERATE', plumeInfluence: 'LOW', keySource: 'Vehicular + Urban Transit', coordinates: { x: 230, y: 190 }, lat: 28.6139, lng: 77.2090 },
+  { id: 'noida', name: 'Noida', hindiName: 'नोएडा', districtKey: 'noida', aqi: 165, aqiStatus: 'MODERATE', pm25: 79, tomorrowAqi: 184, trend: 'up', inversion: 'MODERATE', dispersion: 'MODERATE', plumeInfluence: 'LOW', keySource: 'Construction Dust + Traffic', coordinates: { x: 310, y: 220 }, lat: 28.5355, lng: 77.3910 },
+  { id: 'gurugram', name: 'Gurugram', hindiName: 'गुरुग्राम', districtKey: 'gurugram', aqi: 154, aqiStatus: 'MODERATE', pm25: 76, tomorrowAqi: 168, trend: 'up', inversion: 'LOW', dispersion: 'MODERATE', plumeInfluence: 'LOW', keySource: 'Highway Transit + Stagnation', coordinates: { x: 155, y: 275 }, lat: 28.4595, lng: 77.0266 },
+  { id: 'ghaziabad', name: 'Ghaziabad', hindiName: 'गाज़ियाबाद', districtKey: 'ghaziabad', aqi: 188, aqiStatus: 'MODERATE', pm25: 86, tomorrowAqi: 195, trend: 'up', inversion: 'MODERATE', dispersion: 'LOW', plumeInfluence: 'MODERATE', keySource: 'Industrial Biomass + Transit', coordinates: { x: 325, y: 130 }, lat: 28.6692, lng: 77.4538 },
+  { id: 'faridabad', name: 'Faridabad', hindiName: 'फरीदाबाद', districtKey: 'faridabad', aqi: 162, aqiStatus: 'MODERATE', pm25: 78, tomorrowAqi: 172, trend: 'up', inversion: 'MODERATE', dispersion: 'LOW', plumeInfluence: 'LOW', keySource: 'Industrial Corridor + Settling', coordinates: { x: 245, y: 315 }, lat: 28.4089, lng: 77.3178 },
+  { id: 'greater_noida', name: 'Greater Noida', hindiName: 'ग्रेटर नोएडा', districtKey: 'greater_noida', aqi: 175, aqiStatus: 'MODERATE', pm25: 82, tomorrowAqi: 180, trend: 'up', inversion: 'MODERATE', dispersion: 'MODERATE', plumeInfluence: 'LOW', keySource: 'Expressway Corridors + Regional Basin', coordinates: { x: 375, y: 260 }, lat: 28.4744, lng: 77.5040 }
 ];
 
 const defaultForecast: ForecastResponse = {
   points: [
-    { hourOffset: 0, timeLabel: 'NOW', dayLabel: 'Today', aqi: 287, pm25: 138, isPeak: false, inversion: 'HIGH', dispersion: 'LOW', plumeRisk: 'MODERATE' },
-    { hourOffset: 12, timeLabel: '+12h', dayLabel: 'Tonight', aqi: 305, pm25: 149, isPeak: false, inversion: 'HIGH', dispersion: 'LOW', plumeRisk: 'MODERATE' },
-    { hourOffset: 24, timeLabel: '+24h', dayLabel: 'Tomorrow AM', aqi: 326, pm25: 164, isPeak: true, inversion: 'HIGH', dispersion: 'POOR', plumeRisk: 'MODERATE' },
-    { hourOffset: 36, timeLabel: '+36h', dayLabel: 'Tomorrow Eve', aqi: 341, pm25: 174, isPeak: true, inversion: 'HIGH', dispersion: 'LOW', plumeRisk: 'HIGH' },
-    { hourOffset: 48, timeLabel: '+48h', dayLabel: 'Day 2 Peak', aqi: 349, pm25: 182, isPeak: true, inversion: 'HIGH', dispersion: 'POOR', plumeRisk: 'HIGH' },
-    { hourOffset: 60, timeLabel: '+60h', dayLabel: 'Day 3 Day', aqi: 310, pm25: 152, isPeak: false, inversion: 'MODERATE', dispersion: 'MODERATE', plumeRisk: 'LOW' },
-    { hourOffset: 72, timeLabel: '+72h', dayLabel: 'Day 3 Eve', aqi: 274, pm25: 122, isPeak: false, inversion: 'MODERATE', dispersion: 'GOOD', plumeRisk: 'LOW' }
+    { hourOffset: 0, timeLabel: 'NOW', dayLabel: 'Today', aqi: 186, pm25: 86, isPeak: false, inversion: 'MODERATE', dispersion: 'MODERATE', plumeRisk: 'LOW' },
+    { hourOffset: 12, timeLabel: '+12h', dayLabel: 'Tonight', aqi: 208, pm25: 98, isPeak: false, inversion: 'HIGH', dispersion: 'LOW', plumeRisk: 'MODERATE' },
+    { hourOffset: 24, timeLabel: '+24h', dayLabel: 'Tomorrow AM', aqi: 238, pm25: 114, isPeak: true, inversion: 'HIGH', dispersion: 'LOW', plumeRisk: 'MODERATE' },
+    { hourOffset: 36, timeLabel: '+36h', dayLabel: 'Tomorrow Eve', aqi: 215, pm25: 102, isPeak: false, inversion: 'MODERATE', dispersion: 'MODERATE', plumeRisk: 'MODERATE' },
+    { hourOffset: 48, timeLabel: '+48h', dayLabel: 'Day 2 Peak', aqi: 232, pm25: 110, isPeak: true, inversion: 'HIGH', dispersion: 'LOW', plumeRisk: 'HIGH' },
+    { hourOffset: 60, timeLabel: '+60h', dayLabel: 'Day 3 Day', aqi: 198, pm25: 92, isPeak: false, inversion: 'MODERATE', dispersion: 'GOOD', plumeRisk: 'LOW' },
+    { hourOffset: 72, timeLabel: '+72h', dayLabel: 'Day 3 Eve', aqi: 182, pm25: 82, isPeak: false, inversion: 'LOW', dispersion: 'GOOD', plumeRisk: 'LOW' }
   ],
   peakWindow: {
     time: 'Tomorrow 06:00 – 10:00',
-    expectedAqiRange: '320 – 349 (Very Poor)',
+    expectedAqiRange: '225 – 240 (Poor)',
     why: [
-      'Strong nighttime inversion trapping ground emissions below 280m',
+      'Nocturnal surface inversion trapping ground emissions below 260m',
       'Weak surface winds (< 5 km/h) stalling horizontal dispersion',
-      'Possible northwest agricultural plume transport corridor',
-      'No significant rainfall or frontal wind clearing'
+      'Peripheral particulate flux channeled across eastern NCR corridors',
+      'Solar thermal convection expected to restore dispersion after 10:30 AM'
     ]
   }
 };
@@ -161,6 +161,7 @@ export default function AirSyncHomePage() {
             aqiStatus: overviewData.aqiStatus ?? prev.aqiStatus,
             pm25: overviewData.pollutants?.pm25 ?? prev.pm25,
             pm25Status: overviewData.pm25Status ?? prev.pm25Status,
+            updatedAgo: 'Live Telemetry Active',
             // DO NOT overwrite weather fields here — those come from /api/weather
           }));
         }

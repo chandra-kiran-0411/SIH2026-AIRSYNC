@@ -106,8 +106,10 @@ export default function DelhiNCRMap({
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       // Add Basemap Tile Layer
+      const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'cb1_33ti_1_7848d2f224d11a28833578f6';
+      const darkTileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${cartoKey}`;
       const darkTiles = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        darkTileUrl,
         {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
           subdomains: 'abcd',
@@ -148,7 +150,8 @@ export default function DelhiNCRMap({
         map.removeLayer(tileLayerRef.current);
       }
 
-      let newTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'cb1_33ti_1_7848d2f224d11a28833578f6';
+      let newTileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${cartoKey}`;
       let attribution = '&copy; CARTO &copy; OpenStreetMap';
       let subdomains = 'abcd';
 
@@ -547,8 +550,12 @@ export default function DelhiNCRMap({
               </div>
               <span
                 className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border ${
-                  selectedData.aqiStatus === 'POOR'
+                  selectedData.aqiStatus === 'GOOD'
+                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                    : selectedData.aqiStatus === 'MODERATE'
                     ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                    : selectedData.aqiStatus === 'POOR'
+                    ? 'bg-orange-500/15 text-orange-300 border-orange-500/30'
                     : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
                 }`}
               >
@@ -581,9 +588,15 @@ export default function DelhiNCRMap({
                   AQI {selectedData.tomorrowAqi}
                 </div>
               </div>
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-mono font-semibold">
-                <ArrowUp className="w-3.5 h-3.5" />
-                Rising
+              <div className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono font-semibold border ${
+                selectedData.trend === 'down'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : selectedData.trend === 'up'
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+              }`}>
+                {selectedData.trend === 'down' ? <ArrowDown className="w-3.5 h-3.5" /> : selectedData.trend === 'up' ? <ArrowUp className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+                {selectedData.trend === 'down' ? 'Improving' : selectedData.trend === 'up' ? 'Rising' : 'Stable'}
               </div>
             </div>
 
