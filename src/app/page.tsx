@@ -10,7 +10,7 @@ import AtmosphericIntelligence from '@/components/AtmosphericIntelligence';
 import DelhiNCRMap from '@/components/DelhiNCRMap';
 import Forecast72Hours from '@/components/Forecast72Hours';
 import ActionPanel from '@/components/ActionPanel';
-import AskAirSync from '@/components/AskAirSync';
+
 import Footer from '@/components/Footer';
 import { TimelineCode, AtmosphericSnapshot, RegionTelemetry, ForecastResponse, ActionAdvisory } from '@/lib/types';
 
@@ -296,8 +296,6 @@ export default function AirSyncHomePage() {
         {/* Section 6: ACTION (Citizen, Authority, Industry Protocols) */}
         <ActionPanel advisories={advisories} />
 
-        {/* AI Atmospheric Explainer: Ask AirSync */}
-        <AskAirSync />
 
       </main>
 
